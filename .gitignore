@@ -1,0 +1,40 @@
+# Ignore Python virtual environments
+mediapipe_env/
+new_env/
+
+# Ignore compiled Python files
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# Ignore VS Code settings and logs
+.vscode/
+*.code-workspace
+
+# Ignore environment variables
+.env
+
+# Ignore dependency-related directories
+venv/
+.env/
+site-packages/
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ignore snapshots, temp files, and cache
+snapshots/
+*.tmp
+.cache/
+
+# Ignore package management files (if applicable)
+node_modules/
+package-lock.json
+yarn.lock

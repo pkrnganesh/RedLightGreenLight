@@ -1,0 +1,384 @@
+# import cv2
+# import time
+# import pygame
+# from tkinter import Tk, Label
+# from random import randint
+# import pyttsx3  # For text-to-speech
+
+# # Initialize Pygame for playing music
+# pygame.init()
+
+# # Initialize text-to-speech
+# engine = pyttsx3.init()
+
+# # File paths
+# GAME_SONG = "sounds/game_song.mp3"
+# LOG_FILE = "resources/eliminated_players.txt"
+# SNAPSHOT_FOLDER = "snapshots"  # Folder to save snapshots
+
+# # Create the folder if it doesn't exist
+# import os
+# if not os.path.exists(SNAPSHOT_FOLDER):
+#     os.makedirs(SNAPSHOT_FOLDER)
+
+# # Game Parameters
+# motion_threshold = 5000  # Sensitivity for motion detection
+# players = ["Player 1", "Player 2", "Player 3", "Player 4"]  # List of players
+# player_positions = {}  # Stores player positions
+# eliminated = []
+
+# # Initialize webcam
+# cap = cv2.VideoCapture(0)
+
+# # Helper function to detect motion
+# def detect_motion(frame1, frame2, positions):
+#     diff = cv2.absdiff(frame1, frame2)
+#     gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+#     blur = cv2.GaussianBlur(gray, (5, 5), 0)
+#     _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
+#     dilated = cv2.dilate(thresh, None, iterations=3)
+#     contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    
+#     # Detect motion per player region
+#     player_movement = []
+#     for i, pos in enumerate(positions):
+#         x, y, w, h = pos
+#         mask = thresh[y:y+h, x:x+w]
+#         motion_score = cv2.countNonZero(mask)
+#         if motion_score > motion_threshold:
+#             player_movement.append(players[i])
+#     return player_movement
+
+# # Helper function to capture and save snapshot
+# def capture_snapshot(frame, player, position):
+#     x, y, w, h = position
+#     player_frame = frame[y:y+h, x:x+w]
+#     snapshot_path = os.path.join(SNAPSHOT_FOLDER, f"{player}.jpg")
+#     cv2.imwrite(snapshot_path, player_frame)
+#     print(f"Snapshot saved for {player}: {snapshot_path}")
+
+# # Helper function to display eliminated players
+# def update_status():
+#     root = Tk()
+#     root.title("Game Status")
+#     text = f"Eliminated Players: {', '.join(eliminated)}" if eliminated else "No one eliminated yet!"
+#     label = Label(root, text=text, font=("Arial", 16))
+#     label.pack()
+#     root.after(3000, root.destroy)  # Close window after 3 seconds
+#     root.mainloop()
+
+# # Helper function to log eliminated players
+# def log_eliminated_players():
+#     with open(LOG_FILE, "w") as f:
+#         for player in eliminated:
+#             f.write(f"{player}\n")
+
+# # Helper function to read out names
+# def read_out_names(names):
+#     for name in names:
+#         engine.say(name)
+#     engine.runAndWait()
+
+# # Initialize player positions
+# _, sample_frame = cap.read()
+# height, width, _ = sample_frame.shape
+# region_width = width // len(players)
+# for i, player in enumerate(players):
+#     player_positions[player] = (i * region_width, 0, region_width, height)
+
+# # Game loop
+# try:
+#     print("Game Starting! Players can move when the music is playing.")
+
+#     # Load the game song
+#     pygame.mixer.music.load(GAME_SONG)
+
+#     while players:
+#         # Play the song
+#         pygame.mixer.music.play()
+#         play_duration = randint(5, 10)  # Random duration for the song to play
+#         time.sleep(play_duration)
+#         pygame.mixer.music.stop()
+
+#         print("Song stopped! Detecting motion...")
+
+#         # Capture frames for motion detection
+#         _, frame1 = cap.read()
+#         time.sleep(0.1)
+#         _, frame2 = cap.read()
+
+#         # Detect motion
+#         movements = detect_motion(frame1, frame2, list(player_positions.values()))
+#         print(f"Players who moved: {', '.join(movements)}")
+
+#         # Eliminate players who moved and capture snapshots
+#         for player in movements:
+#             if player in players:
+#                 players.remove(player)
+#                 eliminated.append(player)
+#                 print(f"Eliminated: {player}")
+
+#                 # Capture and save snapshot
+#                 capture_snapshot(frame2, player, player_positions[player])
+
+#         # Display and log eliminated players
+#         update_status()
+#         log_eliminated_players()
+
+#         # Read out eliminated players
+#         if movements:
+#             read_out_names(movements)
+
+#         if not players:
+#             print("Game Over! All players eliminated.")
+#             break
+
+# except KeyboardInterrupt:
+#     print("Game interrupted!")
+
+# finally:
+#     # Release resources
+#     cap.release()
+#     cv2.destroyAllWindows()
+#     pygame.quit()
+# import cv2
+# import time
+# import pygame
+# from random import randint
+# import pyttsx3  # For text-to-speech
+
+# # Initialize Pygame for playing music
+# pygame.init()
+
+# # Initialize text-to-speech
+# engine = pyttsx3.init()
+
+# # File paths
+# GAME_SONG = "sounds/game_song.mp3"
+# LOG_FILE = "resources/eliminated_players.txt"
+
+# # Game Parameters
+# motion_threshold = 5000  # Sensitivity for motion detection
+# players = ["Player 1", "Player 2", "Player 3", "Player 4"]  # List of players
+# eliminated = []
+
+# # Initialize webcam
+# cap = cv2.VideoCapture(0)
+
+# # Load Haar cascade for face detection
+# face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+# # Helper function to detect motion
+# def detect_motion(frame1, frame2):
+#     diff = cv2.absdiff(frame1, frame2)
+#     gray = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
+#     blur = cv2.GaussianBlur(gray, (5, 5), 0)
+#     _, thresh = cv2.threshold(blur, 20, 255, cv2.THRESH_BINARY)
+#     dilated = cv2.dilate(thresh, None, iterations=3)
+#     contours, _ = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+#     return sum(cv2.contourArea(c) for c in contours)
+
+# # Helper function to read out names
+# def read_out_names(names):
+#     for name in names:
+#         engine.say(name)
+#     engine.runAndWait()
+
+# # Game loop
+# try:
+#     print("Game Starting! Players can move when the music is playing.")
+
+#     # Load the game song
+#     pygame.mixer.music.load(GAME_SONG)
+
+#     while players:
+#         # Play the song
+#         pygame.mixer.music.play()
+#         play_duration = randint(5, 10)  # Random duration for the song to play
+#         time.sleep(play_duration)
+#         pygame.mixer.music.stop()
+
+#         print("Song stopped! Detecting motion...")
+
+#         # Capture frames for motion detection
+#         _, frame1 = cap.read()
+#         time.sleep(0.1)
+#         _, frame2 = cap.read()
+
+#         # Detect faces
+#         gray_frame = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
+#         faces = face_cascade.detectMultiScale(gray_frame, 1.1, 4)
+
+#         # Detect motion
+#         motion_score = detect_motion(frame1, frame2)
+#         print(f"Motion Score: {motion_score}")
+
+#         if motion_score > motion_threshold:
+#             for (x, y, w, h) in faces:
+#                 # Draw a rectangle around the face
+#                 cv2.rectangle(frame2, (x, y), (x + w, y + h), (0, 0, 255), 2)
+#                 cv2.putText(frame2, "Eliminated", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 0, 255), 2)
+            
+#             # Eliminate the first player
+#             if players:
+#                 eliminated_player = players.pop(0)
+#                 eliminated.append(eliminated_player)
+#                 print(f"Eliminated: {eliminated_player}")
+#                 read_out_names([eliminated_player])
+
+#         # Show live camera feed with rectangles
+#         cv2.imshow("Game Feed", frame2)
+
+#         # End game if 'q' is pressed or all players are eliminated
+#         if cv2.waitKey(1) & 0xFF == ord('q') or not players:
+#             break
+
+#     print("Game Over! All players eliminated.")
+
+# except KeyboardInterrupt:
+#     print("Game interrupted!")
+
+# finally:
+#     # Release resources
+#     cap.release()
+#     cv2.destroyAllWindows()
+#     pygame.quit()
+
+
+
+
+import cv2
+import time
+import pygame
+from random import randint
+import pyttsx3
+import mediapipe as mp  # For pose detection
+
+# Initialize Pygame for playing music
+pygame.init()
+
+# Initialize text-to-speech
+engine = pyttsx3.init()
+
+# File paths
+GAME_SONG = "sounds/game_song.mp3"
+SNAPSHOT_FOLDER = "snapshots"
+motion_threshold = 0.05  # Threshold for landmark movement
+
+# Players and motion tracking
+players = ["Player 1", "Player 2", "Player 3", "Player 4"]
+eliminated = []
+prev_landmarks = {}
+
+# Initialize MediaPipe Pose
+mp_pose = mp.solutions.pose
+mp_drawing = mp.solutions.drawing_utils
+pose = mp_pose.Pose()
+
+# Initialize webcam
+cap = cv2.VideoCapture(0)
+
+# Helper function to detect motion
+def detect_landmark_motion(landmarks_prev, landmarks_curr):
+    total_motion = 0
+    for prev, curr in zip(landmarks_prev, landmarks_curr):
+        if prev.visibility > 0.5 and curr.visibility > 0.5:  # Visible landmarks only
+            total_motion += ((curr.x - prev.x) ** 2 + (curr.y - prev.y) ** 2) ** 0.5
+    return total_motion
+
+# Helper function to save a snapshot
+def save_snapshot(player, frame):
+    filepath = f"{SNAPSHOT_FOLDER}/{player}_snapshot.jpg"
+    cv2.imwrite(filepath, frame)
+    print(f"Snapshot saved for {player}: {filepath}")
+
+# Helper function to read out names
+def read_out_names(names):
+    for name in names:
+        engine.say(name)
+    engine.runAndWait()
+
+# Game loop
+try:
+    print("Game Starting! Players can move when the music is playing.")
+
+    # Load the game song
+    pygame.mixer.music.load(GAME_SONG)
+
+    while players:
+        # Play the song
+        pygame.mixer.music.play()
+        play_duration = randint(5, 10)  # Random duration for the song to play
+        time.sleep(play_duration)
+        pygame.mixer.music.stop()
+
+        print("Song stopped! Detecting motion...")
+
+        # Capture frame
+        ret, frame = cap.read()
+        if not ret:
+            print("Failed to capture frame.")
+            break
+
+        # Convert frame to RGB for MediaPipe
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        # Process the frame with MediaPipe Pose
+        results = pose.process(rgb_frame)
+
+        if results.pose_landmarks:
+            landmarks = results.pose_landmarks.landmark
+
+            # Draw pose landmarks on the frame
+            mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+
+            # Divide players into quadrants (if needed for large space)
+            frame_height, frame_width, _ = frame.shape
+            regions = {
+                "Player 1": (0, 0, frame_width // 2, frame_height // 2),
+                "Player 2": (frame_width // 2, 0, frame_width, frame_height // 2),
+                "Player 3": (0, frame_height // 2, frame_width // 2, frame_height),
+                "Player 4": (frame_width // 2, frame_height // 2, frame_width, frame_height),
+            }
+
+            # Detect motion for each player
+            for player, (x1, y1, x2, y2) in regions.items():
+                player_landmarks = [
+                    lm for lm in landmarks
+                    if x1 <= lm.x * frame_width <= x2 and y1 <= lm.y * frame_height <= y2
+                ]
+
+                if player_landmarks:
+                    motion = detect_landmark_motion(prev_landmarks.get(player, []), player_landmarks)
+                    print(f"{player} Motion: {motion}")
+
+                    if motion > motion_threshold and player in players:
+                        players.remove(player)
+                        eliminated.append(player)
+                        print(f"Eliminated: {player}")
+                        read_out_names([player])
+                        save_snapshot(player, frame)
+
+                    # Update landmarks for the next frame
+                    prev_landmarks[player] = player_landmarks
+
+        # Display the live feed
+        for player in eliminated:
+            cv2.putText(frame, f"{player} Eliminated", (50, 50 + 30 * eliminated.index(player)),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+
+        cv2.imshow("Game Feed", frame)
+
+        # End game if 'q' is pressed or all players are eliminated
+        if cv2.waitKey(1) & 0xFF == ord('q') or not players:
+            break
+
+    print("Game Over! All players eliminated.")
+
+except KeyboardInterrupt:
+    print("Game interrupted!")
+
+finally:
+    cap.release()
+    cv2.destroyAllWindows()
+    pygame.quit()
